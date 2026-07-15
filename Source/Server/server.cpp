@@ -343,8 +343,15 @@ bool victim_auth_middleware(const HttpRequest& request, HttpResponse& response) 
 //
 //-------------------------------------------------
 static HttpResponse close_session_handler(const HttpRequest& req) {
-    try{
-        const auto port = std::atoi(req.query_params.at("port").c_str());
+    try {
+        auto it = req.query_params.find("port");
+        if (it == req.query_params.end()) {
+            return HttpResponse().set_status(400).set_json(R"({"message":"Missing port parameter"})");
+        }
+        uint16_t port;
+        if (!util::parse::parse_port(it->second, port)) {
+            return HttpResponse().set_status(400).set_json(R"({"message":"Invalid port parameter"})");
+        }
         SessionManager::instance().stop_listener(port);
         logger::success("Sessions Closed on Port: {}", port);
         return HttpResponse().set_json(R"("Session closed!")");
@@ -353,12 +360,16 @@ static HttpResponse close_session_handler(const HttpRequest& req) {
     }
 }
 
-//-------------------------------------------------
-//
-//-------------------------------------------------
 static HttpResponse open_session_handler(const HttpRequest& req) {
-    try{
-        const auto port = std::atoi(req.query_params.at("port").c_str());
+    try {
+        auto it = req.query_params.find("port");
+        if (it == req.query_params.end()) {
+            return HttpResponse().set_status(400).set_json(R"({"message":"Missing port parameter"})");
+        }
+        uint16_t port;
+        if (!util::parse::parse_port(it->second, port)) {
+            return HttpResponse().set_status(400).set_json(R"({"message":"Invalid port parameter"})");
+        }
         SessionManager::instance().start_listener(port);
         logger::success("Sessions Started on Port: {}", port);
         return HttpResponse().set_json(R"("Session started!")");
