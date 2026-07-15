@@ -1,7 +1,7 @@
 #include <RESTServer.hpp>
 #include <cpppwn.hpp>
 #include <SQLiteCpp/SQLiteCpp.h>
-
+#include "Util/Parse.hpp"
 #include <atomic>
 #include <csignal>
 #include <cstdint>
